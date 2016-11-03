@@ -17,6 +17,7 @@ if __name__ == "__main__":
     menu.draw()
     pygame.key.set_repeat(199,69)
     pygame.display.update()
+    game = Juego(0,surface)
     while 1:
         for event in pygame.event.get():
             if event.type == KEYDOWN:
@@ -26,7 +27,7 @@ if __name__ == "__main__":
                     menu.draw(1)
                 if event.key == K_RETURN:
                     if menu.get_position() == 0:
-                        print "sisas"
+                        game.nivel1()
                     if menu.get_position() == 1:
                         pygame.display.quit()
                         sys.exit()
