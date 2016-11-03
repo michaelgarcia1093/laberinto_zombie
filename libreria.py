@@ -52,7 +52,7 @@ class Elemento(pygame.sprite.Sprite):
 
 def dibujarmapa(archivo):
     global images
-    images = ["archivos/imagenes/cesped.jpeg","archivos/imagenes/muro.jpeg"]
+    images = ["archivos/imagenes/cesped.jpeg","archivos/imagenes/muro.jpeg", "archivos/imagenes/puerta.png"]
     interprete = ConfigParser.ConfigParser()
     interprete.read(archivo)
     try:
@@ -72,6 +72,15 @@ def dibujarmapa(archivo):
 
             if((interprete.get(cd, "muro") == "si") and (interprete.get(cd, "bloqueo") == "si") and (interprete.get(cd, "puerta") == "no")):
                 m = Elemento(ex*25,ey*25, images[1])
+                m.tipo=interprete.get(cd, "nombre")
+                m.bloqueo = interprete.get(cd, "bloqueo")
+                m.update_rect(ex*25,ey*25)
+                ls_muros.add(m)
+                ls_elementos.add(m)
+                ls_todos.add(m)
+
+            if((interprete.get(cd, "muro") == "no") and (interprete.get(cd, "bloqueo") == "no") and (interprete.get(cd, "puerta") == "si")):
+                m = Elemento(ex*25,ey*25, images[2])
                 m.tipo=interprete.get(cd, "nombre")
                 m.bloqueo = interprete.get(cd, "bloqueo")
                 m.update_rect(ex*25,ey*25)
@@ -181,7 +190,7 @@ class Jugador(pygame.sprite.Sprite):
     def __init__(self, x,y):
         pygame.sprite.Sprite.__init__(self)
 
-        matrizimg = cargar_fondo("archivos/imagenes/heroe.png", 32,47)
+        matrizimg = cargar_fondo("archivos/imagenes/heroe.png", 24,37)
         for i in xrange(3):
             self.image_abajo.append(matrizimg[i][0])
         for i in xrange(3):
@@ -250,7 +259,7 @@ class Jugador(pygame.sprite.Sprite):
     def update(self):
         ls_choque=pygame.sprite.spritecollide(self, self.paredes, False)
         for muro in ls_choque:
-            if(muro.tipo == "pared" or muro.tipo == "d_dinamita"):
+            if(muro.bloqueo == "si"):
                 if self.direccion == "derecha":
                    self.rect.right=muro.rect.left
                 else:
@@ -295,7 +304,7 @@ class Juego:
         terminar=False
         muerto = False
         m = dibujarmapa("mapeo.config")
-
+        print ls_muros
         jugador = Jugador(100, 100)
         jugador.paredes = ls_muros
         ls_jugador.add(jugador)
