@@ -27,7 +27,7 @@ if __name__ == "__main__":
                     menu.draw(1)
                 if event.key == K_RETURN:
                     if menu.get_position() == 0:
-                        game.nivel1()
+                        game.historia()
                     if menu.get_position() == 1:
                         pygame.display.quit()
                         sys.exit()

@@ -14,6 +14,22 @@ def checkCollision(sprite1, sprite2):
     else:
         return False
 
+def lifebars(player, surface, pos):
+    # Colores
+    NEGRO = (0,0,0)
+    BLANCO = (255,255,255)
+    AZUL = (0,0,255)
+    ROJO = (255,0,0)
+    VERDE = (0,255,0)
+    AMARILLO = (255,255,0)
+    if(player.vida > 75):
+        color = VERDE
+    elif(player.vida > 50):
+        color = AMARILLO
+    else:
+        color = ROJO
+    pygame.draw.rect(surface, color, (pos[0],pos[1],player.vida,10))
+
 def cargar_fondo(archivo, ancho, alto, sin_canal=False):
     if(not sin_canal):
         imagen = pygame.image.load(archivo).convert_alpha()
@@ -186,6 +202,13 @@ class Menu:
         y = self.dest_surface.get_rect().centery - self.menu_height / 2
         mx, my = self.pozycja_wklejenia
         self.pozycja_wklejenia = (x+mx, y+my)
+
+def status():
+    #STATS E INVENTARIO DEL JUGADOR
+    sub.fill((0,0,0))
+    blood = tipo.render("Vida actual: " , 1 , (255,0,0))
+    sub.blit(blood, [10,5])
+    lifebars(jugador, sub, [140,8])
 
 class Bullet_canon(pygame.sprite.Sprite):
     paredes=None
@@ -517,8 +540,44 @@ class Juego:
         self.surface = surface
 
     def historia(self):
-        print "historia"
-
+        ALTO = 600
+        ANCHO = 800
+        pygame.init()
+        pantalla = pygame.display.set_mode((ANCHO, ALTO+30))
+        pygame.display.set_caption(" Zombie maze - [History] ", 'Spine Runtime')
+        pantalla.fill((0,0,0))
+        font_path = 'archivos/fuentes/Bombing.ttf'
+        font = pygame.font.Font
+        tipo = pygame.font.Font(font_path, 40)
+        text = tipo.render("Un viejo zombie sale a caminar " , 1 , (255,0,0))
+        text1 = tipo.render("pero se da cuenta que nada esta", 1 , (255,0,0))
+        text2 = tipo.render("tan bien como parecia los humanos", 1 , (255,0,0))
+        text3 = tipo.render("se estan apoderando del planeta ", 1 , (255,0,0))
+        text4 = tipo.render("decide asesinar al lider humano", 1 , (255,0,0))
+        text5 = tipo.render("y asi conquistarlos , ayudalo!", 1 , (255,0,0))
+        img = pygame.image.load("archivos/imagenes/historia.png")
+        img = pygame.transform.scale(img, (ANCHO, ALTO+30))
+        text5 = tipo.render("Presiona ENTER para continuar !", 1 , (255,255,255))
+        pantalla.blit(img, (0,0))
+        pantalla.blit(text, (10,10))
+        pantalla.blit(text1, (10,50))
+        pantalla.blit(text2, (10,90))
+        pantalla.blit(text3, (10,130))
+        pantalla.blit(text4, (10,170))
+        pantalla.blit(text4, (10,220))
+        pantalla.blit(text5, (70,ALTO-10))
+        pygame.display.flip()
+        terminar = False
+        while not terminar:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    terminar=True
+                    salir=True
+                elif event.type==pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        terminar=True
+                    if event.key == pygame.K_RETURN:
+                        self.nivel1()
     def nivel1(self):
         global ANCHO,ALTO,pantalla,jugador,ls_todos,sub,tipo,ls_balas_boss,ls_muros,ls_elementos,ls_enemigos,ls_balas_e,ls_canon
         c_fondo = (255,0,0)
@@ -607,8 +666,8 @@ class Juego:
             """ZONA DE COLLIDES"""
             for ca in ls_canon:
                 if(checkCollision(ca,jugador)):
-                    ls_canon.remove(b_e)
-                    ls_todos.remove(b_e)
+                    ls_canon.remove(ca)
+                    ls_todos.remove(ca)
                     jugador.vida -= random.randrange(10,20)
             for el in ls_elementos:
                 if(el.tipo == "puerta") and (mini_boss) and checkCollision(jugador,el):
@@ -669,4 +728,5 @@ class Juego:
             ls_balas_e.draw(pantalla)
             ls_enemigos.draw(pantalla)
             ls_jugador.draw(pantalla)
+            status()
             pygame.display.flip()
