@@ -39,6 +39,7 @@ class Elemento(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load(archivo).convert()
         self.rect = self.image.get_rect()
+        self.vida = 100
         self.rect.y = y
         self.rect.x = x
         self.contdin = 0
@@ -432,8 +433,7 @@ class Juego:
         ls_jugador=pygame.sprite.Group()
         ls_bajasj = pygame.sprite.Group()
         ls_balas_e = pygame.sprite.Group()
-        terminar=False
-        muerto = False
+
 
         m = dibujarmapa("mapeo.config")
         print ls_muros
@@ -451,10 +451,12 @@ class Juego:
             ls_todos.add(en)
             ls_enemigos.add(en)
 
+        terminar=False
+        muerto = False
+        mini_boss = False
         while not terminar:
-        
-            for event in pygame.event.get():
 
+            for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     terminar=True
                     salir=True
@@ -491,6 +493,9 @@ class Juego:
 
 
             """ZONA DE COLLIDES"""
+            for el in ls_elementos:
+                if(el.tipo == "puerta") and (mini_boss) and checkCollision(jugador,el):
+                    print("ganaste")
             for b_j in ls_bajasj:
                 for muro in ls_muros:
                     if(checkCollision(b_j,muro)):
@@ -511,6 +516,18 @@ class Juego:
                         ls_balas_e.remove(b_e)
                         ls_todos.remove(b_e)
 
+                for el in ls_elementos:
+                    if(el.tipo == "boss1"):
+                        if(checkCollision(b_j,el)):
+                            ls_bajasj.remove(b_j)
+                            ls_todos.remove(b_j)
+                            el.vida -= random.randrange(20,30)
+                        if(el.vida <= 0):
+                            print "muerto"
+                            el.tipo = "cesped"
+                            el.image = pygame.image.load(images[0])
+                            mini_boss= True
+
             for b_e in ls_balas_e:
                 for muro in ls_muros:
                     if(checkCollision(b_e,muro)):
@@ -525,8 +542,8 @@ class Juego:
             ls_todos.update()
             ls_enemigos.update()
             ls_jugador.update()
-            ls_todos.draw(pantalla)
             ls_elementos.draw(pantalla)
+            ls_todos.draw(pantalla)
             ls_bajasj.draw(pantalla)
             ls_balas_e.draw(pantalla)
             ls_enemigos.draw(pantalla)
