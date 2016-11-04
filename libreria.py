@@ -792,6 +792,7 @@ class Juego:
         ls_bajasj = pygame.sprite.Group()
         ls_balas_e = pygame.sprite.Group()
         ls_canon = pygame.sprite.Group()
+        ls_balas_boss = pygame.sprite.Group()
 
         m = dibujarmapa("mapeo.config")
         jugador = Jugador(80, 55)
