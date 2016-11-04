@@ -649,6 +649,47 @@ class Juego:
     def __init__(self,nivel,surface):
         self.nivel = nivel
         self.surface = surface
+    def final(self):
+        ALTO = 600
+        ANCHO = 800
+        pygame.init()
+        pantalla = pygame.display.set_mode((ANCHO, ALTO+30))
+        pygame.display.set_caption(" Zombie maze - [History-End] ", 'Spine Runtime')
+        pantalla.fill((0,0,0))
+        font_path = 'archivos/fuentes/Bombing.ttf'
+        font = pygame.font.Font
+        tipo = pygame.font.Font(font_path, 40)
+        text = tipo.render("Tras derrotar al malvado lider " , 1 , (255,0,0))
+        text1 = tipo.render("humano se logro restablecer el", 1 , (255,0,0))
+        text2 = tipo.render("balance natural entre los zombies", 1 , (255,0,0))
+        text3 = tipo.render("y los humanos. El viejo zombie ", 1 , (255,0,0))
+        text4 = tipo.render("decidio seguir batallando por ", 1 , (255,0,0))
+        text5 = tipo.render("la justicia.", 1 , (255,0,0))
+        img = pygame.image.load("archivos/imagenes/end.jpg")
+        img = pygame.transform.scale(img, (ANCHO, ALTO+30))
+        text5 = tipo.render("Presiona ENTER para continuar !", 1 , (255,255,255))
+        pantalla.blit(img, (0,0))
+        pantalla.blit(text, (10,10))
+        pantalla.blit(text1, (10,50))
+        pantalla.blit(text2, (10,90))
+        pantalla.blit(text3, (10,130))
+        pantalla.blit(text4, (10,170))
+        pantalla.blit(text4, (10,220))
+        pantalla.blit(text5, (70,ALTO-10))
+        pygame.display.flip()
+        terminar = False
+        while not terminar:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    terminar=True
+                    salir=True
+                elif event.type==pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        terminar=True
+                    if event.key == pygame.K_RETURN:
+                        terminar=True
+                        salir=True
+                        sys.exit(0)
 
     def historia(self):
         ALTO = 600
@@ -928,16 +969,18 @@ class Juego:
             ls_canon.add(canon)
             ls_todos.add(canon)
 
-        b = Boss(ANCHO/2,ALTO/2)
-        b.paredes=ls_muros
-        ls_enemigos.add(b)
-        ls_todos.add(b)
+        boss = Boss(ANCHO/2,ALTO/2)
+        boss.paredes=ls_muros
+        ls_enemigos.add(boss)
+        ls_todos.add(boss)
 
         terminar=False
         muerto = False
         mini_boss = False
         while not terminar:
-
+            if(len(ls_enemigos) == 0):
+                terminar=True
+                self.final()
             if(jugador.vida <= 0):
                 terminar=True
                 salir=True
@@ -962,7 +1005,7 @@ class Juego:
                         ls_todos.add(b)
 
             T=pygame.key.get_pressed()
-            b.restartMovements([jugador.rect.x,jugador.rect.y])
+            boss.restartMovements([jugador.rect.x,jugador.rect.y])
             if T[pygame.K_LEFT]:
                 jugador.update()
                 jugador.ir_izq()
@@ -1008,7 +1051,7 @@ class Juego:
                     if(checkCollision(b_j,enemigo)):
                         ls_bajasj.remove(b_j)
                         ls_todos.remove(b_j)
-                        enemigo.vida -= random.randrange(10,20)
+                        enemigo.vida -= random.randrange(40,100)
                     if(enemigo.vida <= 0 ):
                         ls_todos.remove(enemigo)
                         ls_enemigos.remove(enemigo)
