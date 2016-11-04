@@ -280,6 +280,28 @@ class Jugador(pygame.sprite.Sprite):
                         else:
                             if self.direccion == "abajo":
                                 self.rect.bottom=muro.rect.top
+
+class Bullet(pygame.sprite.Sprite): #Hereda de la clase sprite
+
+    def __init__(self, img_name, x,y, direccion): #img para cargar, y su padre(de donde debe salir la bala)
+    	pygame.sprite.Sprite.__init__(self)
+    	self.image = pygame.image.load(img_name).convert_alpha()
+    	self.rect = self.image.get_rect()
+    	self.rect.x = x
+    	self.rect.y = y
+        self.speed = 1
+        self.direccion = direccion
+    def update(self):
+
+        if(self.direccion == "derecha"): #derecha
+            self.rect.x += self.speed
+        if(self.direccion == "izquierda"):#izquierda
+            self.rect.x -= self.speed
+        if(self.direccion == "arriba"):#arriba
+            self.rect.y -= self.speed
+        if(self.direccion == "abajo"):#abajo
+            self.rect.y += self.speed
+
 class Juego:
     nivel=0
     surface=None
@@ -287,6 +309,9 @@ class Juego:
     def __init__(self,nivel,surface):
         self.nivel = nivel
         self.surface = surface
+
+    def historia(self):
+        print "historia"
 
     def nivel1(self):
         global ANCHO,ALTO,pantalla,jugador,ls_todos,sub,tipo,ls_balas_boss,ls_muros,ls_elementos,ls_enemigos
@@ -310,6 +335,7 @@ class Juego:
         ls_muros=pygame.sprite.Group()
         ls_elementos=pygame.sprite.Group()
         ls_jugador=pygame.sprite.Group()
+        ls_bajasj = pygame.sprite.Group()
         terminar=False
         muerto = False
 
@@ -331,6 +357,13 @@ class Juego:
                     if event.key == pygame.K_ESCAPE:
                         terminar=True
                         salir=True
+                    if event.key == pygame.K_n:
+                        self.historia()
+
+                    if event.key == pygame.K_SPACE:
+                        b = Bullet("archivos/imagenes/bala_j.png", jugador.rect.x, jugador.rect.y, jugador.direccion)
+                        ls_bajasj.add(b)
+                        ls_todos.add(b)
 
             T=pygame.key.get_pressed()
 
@@ -350,7 +383,17 @@ class Juego:
                 jugador.update()
                 jugador.ir_abaj()
 
+
+            """ZONA DE COLLIDES"""
+            for b_j in ls_bajasj:
+                for muro in ls_muros:
+                    if(checkCollision(b_j,muro)):
+                        ls_bajasj.remove(b_j)
+                        ls_todos.remove(b_j)
+
+            """FIN ZONA DE COLLIDES"""
             ls_todos.update()
             ls_todos.draw(pantalla)
+            ls_bajasj.draw(pantalla)
             ls_jugador.draw(pantalla)
             pygame.display.flip()
