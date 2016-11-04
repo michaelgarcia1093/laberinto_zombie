@@ -288,6 +288,7 @@ class Bullet_canon(pygame.sprite.Sprite):
             else:
                 ls_canon.remove(self)
                 ls_todos.remove(self)
+                ls_balas_boss.remove(self)
         else:
             if(self.cont >= 2):
                 self.cont = 0
@@ -531,6 +532,116 @@ class Bullet(pygame.sprite.Sprite): #Hereda de la clase sprite
         if(self.direccion == "abajo"):#abajo
             self.rect.y += self.speed
 
+class Boss(pygame.sprite.Sprite):
+
+    paredes=None
+    elementos=None
+    moves=[]
+    shot=False
+    probabilidad=random.randrange(0,100)
+    probabilidad1=random.randrange(0,100)
+    def __init__(self, x,y):
+
+        pygame.sprite.Sprite.__init__(self)
+        self.probabilidad = random.randrange(0,100)
+        self.incremento = 1
+        self.image = pygame.image.load("archivos/imagenes/boss_e.png").convert_alpha()
+        self.rect = self.image.get_rect()
+        self.rect.x=x
+        self.rect.y=y
+        self.vida = 1000
+        self.speed = 5
+        self.i=0
+        self.reloj = pygame.time.Clock()
+        self.cont = 0
+
+    def getLife(self):
+    	return self.life
+
+    def update_prob(self):
+        self.probabilidad=random.randrange(0,100)
+        self.probabilidad1=random.randrange(0,100)
+
+    def setLife(self,life):
+    	self.life = life
+
+    def getSpeed(self):
+        return self.speed
+
+    def restartMovements(self,pos):
+        p = [[self.rect.x,self.rect.y],pos]
+        x0 = p[0][0]
+        y0 = p[0][1]
+        x1 = p[1][0]
+        y1 = p[1][1]
+        res = []
+        dx = (x1 - x0)
+        dy = (y1 - y0)
+        if (dy < 0) :
+            dy = -1*dy
+            stepy = -1
+        else :
+            stepy = 1
+        if (dx < 0) :
+            dx = -1*dx
+            stepx = -1
+        else :
+            stepx = 1
+        x = x0
+        y = y0
+        if(dx>dy) :
+            p = 2*dy - dx
+            incE = 2*dy
+            incNE = 2*(dy-dx)
+            while (x != x1) :
+                x = x + stepx
+                if (p < 0) :
+                    p = p + incE
+                else :
+                    y = y + stepy
+                    p = p + incNE
+                p_new = [x, y]
+                res.append(p_new)
+        else :
+            p = 2*dx - dy
+            incE = 2*dx
+            incNE = 2*(dx-dy)
+            while (y != y1) :
+                y = y + stepy
+                if (p < 0) :
+                    p = p + incE
+                else :
+                    x = x + stepx
+                    p = p + incNE
+
+                p_new = [x, y]
+                res.append(p_new)
+        self.moves=res
+        self.i = 0
+
+    def update(self): #se mueve
+        self.update_prob()
+        if(self.probabilidad < 20 and self.probabilidad1 > 98):
+            b = Bullet_canon(self.rect.x,self.rect.y, [0,0])
+            b.go([jugador.rect.x,jugador.rect.y])
+            b.image = pygame.image.load("archivos/imagenes/bala_boss.png").convert_alpha()
+            ls_balas_boss.add(b)
+            ls_todos.add(b)
+        else:
+            if(self.cont == 0):
+                self.cont += 1
+                if(self.i < len(self.moves)):
+                    self.rect.x,self.rect.y = self.moves[self.i][0],self.moves[self.i][1]
+                    self.i += 1 #para que recorra el siguiente
+            else:
+                if(self.cont >= 5):
+                    self.cont = 0
+                else:
+                    self.cont += 1
+
+
+
+
 class Juego:
     nivel=0
     surface=None
@@ -577,7 +688,44 @@ class Juego:
                     if event.key == pygame.K_ESCAPE:
                         terminar=True
                     if event.key == pygame.K_RETURN:
-                        self.nivel1()
+                        terminar=True
+                        salir=True
+                        self.nivel2()
+
+    def pantalla_game_over(self):
+        ALTO = 600
+        ANCHO = 800
+        pygame.init()
+        pantalla = pygame.display.set_mode((ANCHO, ALTO+30))
+        pygame.display.set_caption(" Zombie maze - [History] ", 'Spine Runtime')
+        pantalla.fill((0,0,0))
+        font_path = 'archivos/fuentes/Bombing.ttf'
+        font = pygame.font.Font
+        tipo = pygame.font.Font(font_path, 40)
+
+
+        img = pygame.image.load("archivos/imagenes/game_over.png")
+        img = pygame.transform.scale(img, (ANCHO, ALTO+30))
+        text5 = tipo.render("Presiona ENTER para continuar !", 1 , (255,255,255))
+
+        pantalla.blit(img, (0,0))
+        pantalla.blit(text5, (70,ALTO-10))
+
+        pygame.display.flip()
+        terminar = False
+        while not terminar:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    terminar=True
+                    salir=True
+                elif event.type==pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        terminar=True
+                    if event.key == pygame.K_RETURN:
+                        terminar=True
+                        salir=True
+                        self.historia()
+
     def nivel1(self):
         global ANCHO,ALTO,pantalla,jugador,ls_todos,sub,tipo,ls_balas_boss,ls_muros,ls_elementos,ls_enemigos,ls_balas_e,ls_canon
         c_fondo = (255,0,0)
@@ -626,6 +774,10 @@ class Juego:
         muerto = False
         mini_boss = False
         while not terminar:
+            if(jugador.vida <= 0):
+                terminar=True
+                salir=True
+                self.pantalla_game_over()
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -637,6 +789,8 @@ class Juego:
                         terminar=True
                         salir=True
                     if event.key == pygame.K_n:
+                        terminar=True
+                        salir=True
                         self.historia()
 
                     if event.key == pygame.K_SPACE:
@@ -671,6 +825,8 @@ class Juego:
                     jugador.vida -= random.randrange(10,20)
             for el in ls_elementos:
                 if(el.tipo == "puerta") and (mini_boss) and checkCollision(jugador,el) and (len(ls_enemigos) == 0):
+                    terminar=True
+                    salir=True
                     self.nivel2(jugador.vida)
             for b_j in ls_bajasj:
                 for muro in ls_muros:
@@ -703,7 +859,8 @@ class Juego:
                             el.tipo = "cesped"
                             el.image = pygame.image.load(images[0])
                             mini_boss= True
-
+            if(jugador.vida <= 0):
+                jugador.vida=0
             for b_e in ls_balas_e:
                 for muro in ls_muros:
                     if(checkCollision(b_e,muro)):
@@ -756,6 +913,7 @@ class Juego:
         ls_bajasj = pygame.sprite.Group()
         ls_balas_e = pygame.sprite.Group()
         ls_canon = pygame.sprite.Group()
+        ls_balas_boss = pygame.sprite.Group()
 
         m = dibujarmapa("mapeo0.config")
         jugador = Jugador(80, 55)
@@ -763,23 +921,27 @@ class Juego:
         jugador.paredes = ls_muros
         ls_jugador.add(jugador)
         ls_todos.add(jugador)
-        canon = Canon(35,550)
-        ls_canon.add(canon)
-        ls_todos.add(canon)
 
-        pos_en = [(190, 50),(730,554),(362,485),(534,309),(180,560),(414,425)]
-        dir_en = ["izquierda","arriba","arriba","arriba","arriba","izquierda"]
-        for i in range(len(pos_en)):
-            en = Enemigo(pos_en[i][0],pos_en[i][1])
-            en.paredes = ls_muros
-            en.direccion = dir_en[i]
-            ls_todos.add(en)
-            ls_enemigos.add(en)
+        ls_canons = [(5,550),(5,5),((ANCHO-15),5),(ANCHO-15,550)]
+        for pos in ls_canons:
+            canon = Canon(pos[0],pos[1])
+            ls_canon.add(canon)
+            ls_todos.add(canon)
+
+        b = Boss(ANCHO/2,ALTO/2)
+        b.paredes=ls_muros
+        ls_enemigos.add(b)
+        ls_todos.add(b)
 
         terminar=False
         muerto = False
         mini_boss = False
         while not terminar:
+
+            if(jugador.vida <= 0):
+                terminar=True
+                salir=True
+                self.pantalla_game_over()
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -790,6 +952,7 @@ class Juego:
                     if event.key == pygame.K_ESCAPE:
                         terminar=True
                         salir=True
+                        pygame.display.flip()
                     if event.key == pygame.K_n:
                         self.historia()
 
@@ -799,7 +962,7 @@ class Juego:
                         ls_todos.add(b)
 
             T=pygame.key.get_pressed()
-
+            b.restartMovements([jugador.rect.x,jugador.rect.y])
             if T[pygame.K_LEFT]:
                 jugador.update()
                 jugador.ir_izq()
@@ -818,14 +981,24 @@ class Juego:
 
 
             """ZONA DE COLLIDES"""
+            for b_boss in ls_balas_boss:
+                if(checkCollision(jugador,b_boss)):
+                    dec = random.randrange(30,20)
+                    if(jugador.vida - dec <= 0):
+                        jugador.vida = 0
+                    else:
+                        jugador.vida -= dec
+                    ls_balas_boss.remove(b_boss)
+                    ls_todos(b_boss)
+
+            for en in ls_enemigos:
+                if(checkCollision(jugador,en)):
+                    jugador.vida -= random.randrange(1,5)
             for ca in ls_canon:
                 if(checkCollision(ca,jugador)):
                     ls_canon.remove(ca)
                     ls_todos.remove(ca)
                     jugador.vida -= random.randrange(10,20)
-            for el in ls_elementos:
-                if(el.tipo == "puerta") and (mini_boss) and checkCollision(jugador,el) and (len(ls_enemigos) == 0):
-                    self.nivel2(jugador.vida)
             for b_j in ls_bajasj:
                 for muro in ls_muros:
                     if(checkCollision(b_j,muro)):
@@ -878,6 +1051,7 @@ class Juego:
             ls_elementos.draw(pantalla)
             ls_todos.draw(pantalla)
             ls_canon.draw(pantalla)
+            ls_balas_boss.draw(pantalla)
             ls_bajasj.draw(pantalla)
             ls_balas_e.draw(pantalla)
             ls_enemigos.draw(pantalla)

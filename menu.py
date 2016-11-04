@@ -9,7 +9,7 @@ if not pygame.font.get_init():
 
 if __name__ == "__main__":
     import sys
-    surface = pygame.display.set_mode((854,480)) #0,6671875 and 0,(6) of HD resoultion
+    surface = pygame.display.set_mode((800,600))
     surface.fill((51,51,51))
     menu = Menu()
     menu.set_fontsize(64)
