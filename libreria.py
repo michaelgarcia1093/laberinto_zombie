@@ -52,7 +52,7 @@ class Elemento(pygame.sprite.Sprite):
 
 def dibujarmapa(archivo):
     global images
-    images = ["archivos/imagenes/cesped.jpeg","archivos/imagenes/muro.jpeg", "archivos/imagenes/puerta.png"]
+    images = ["archivos/imagenes/cesped.jpeg","archivos/imagenes/muro.jpeg", "archivos/imagenes/puerta.png","archivos/imagenes/boss_1.png" ]
     interprete = ConfigParser.ConfigParser()
     interprete.read(archivo)
     try:
@@ -84,6 +84,15 @@ def dibujarmapa(archivo):
                 m.tipo=interprete.get(cd, "nombre")
                 m.bloqueo = interprete.get(cd, "bloqueo")
                 m.update_rect(ex*25,ey*25)
+                ls_elementos.add(m)
+                ls_todos.add(m)
+
+            if((interprete.get(cd, "boss1") == "si")):
+                m = Elemento(ex*25,ey*25, images[3])
+                m.tipo=interprete.get(cd, "nombre")
+                m.bloqueo = interprete.get(cd, "bloqueo")
+                m.update_rect(ex*25,ey*25)
+                #ls_muros.add(m)
                 ls_elementos.add(m)
                 ls_todos.add(m)
 class Menu:
@@ -190,7 +199,7 @@ class Jugador(pygame.sprite.Sprite):
     def __init__(self, x,y):
         pygame.sprite.Sprite.__init__(self)
 
-        matrizimg = cargar_fondo("archivos/imagenes/heroe.png", 24,37)
+        matrizimg = cargar_fondo("archivos/imagenes/heroe.png", 23,23)
         for i in xrange(3):
             self.image_abajo.append(matrizimg[i][0])
         for i in xrange(3):
@@ -303,9 +312,10 @@ class Juego:
         ls_jugador=pygame.sprite.Group()
         terminar=False
         muerto = False
+
         m = dibujarmapa("mapeo.config")
         print ls_muros
-        jugador = Jugador(100, 100)
+        jugador = Jugador(80, 55)
         jugador.paredes = ls_muros
         ls_jugador.add(jugador)
         ls_todos.add(jugador)
@@ -339,6 +349,8 @@ class Juego:
             if T[pygame.K_DOWN]:
                 jugador.update()
                 jugador.ir_abaj()
+
+            ls_todos.update()
             ls_todos.draw(pantalla)
             ls_jugador.draw(pantalla)
             pygame.display.flip()
