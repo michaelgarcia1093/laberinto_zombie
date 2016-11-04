@@ -334,7 +334,7 @@ class Enemigo(pygame.sprite.Sprite):
 
             ls_choque=pygame.sprite.spritecollide(self, self.paredes, False)
             for muro in ls_choque:
-                if(muro.tipo == "pared" or muro.tipo == "d_dinamita"):
+                if(muro.bloqueo == "si"):
                     if self.direccion == "derecha":
                        self.rect.right=muro.rect.left
                        self.direccion = "izquierda"
@@ -442,8 +442,8 @@ class Juego:
         ls_jugador.add(jugador)
         ls_todos.add(jugador)
 
-        pos_en = [(190, 53)]
-        dir_en = ["derecha"]
+        pos_en = [(190, 50),(730,554),(362,485),(534,309),(180,560),(414,425)]
+        dir_en = ["izquierda","arriba","arriba","arriba","arriba","izquierda"]
         for i in range(len(pos_en)):
             en = Enemigo(pos_en[i][0],pos_en[i][1])
             en.paredes = ls_muros
@@ -452,8 +452,7 @@ class Juego:
             ls_enemigos.add(en)
 
         while not terminar:
-            if(pygame.mouse.get_pressed()):
-                print(pygame.mouse.get_pos())
+        
             for event in pygame.event.get():
 
                 if event.type == pygame.QUIT:
@@ -524,6 +523,8 @@ class Juego:
 
             """FIN ZONA DE COLLIDES"""
             ls_todos.update()
+            ls_enemigos.update()
+            ls_jugador.update()
             ls_todos.draw(pantalla)
             ls_elementos.draw(pantalla)
             ls_bajasj.draw(pantalla)
