@@ -588,7 +588,7 @@ class Juego:
         vyi=25
         pygame.init()
         pantalla = pygame.display.set_mode((ANCHO, ALTO+30))
-        pygame.display.set_caption(" El laberinto de la muerte lvl 2 - [v1] ", 'Spine Runtime')
+        pygame.display.set_caption(" Zombie maze - [lvl 1] ", 'Spine Runtime')
         pantalla.fill(c_fondo)
         sub = pantalla.subsurface([0,ALTO, ANCHO, 30]) #Dibuja una surface sobre la pantalla
         tipo = pygame.font.SysFont("monospace", 15)
@@ -670,8 +670,162 @@ class Juego:
                     ls_todos.remove(ca)
                     jugador.vida -= random.randrange(10,20)
             for el in ls_elementos:
-                if(el.tipo == "puerta") and (mini_boss) and checkCollision(jugador,el):
-                    print("ganaste")
+                if(el.tipo == "puerta") and (mini_boss) and checkCollision(jugador,el) and (len(ls_enemigos) == 0):
+                    self.nivel2(jugador.vida)
+            for b_j in ls_bajasj:
+                for muro in ls_muros:
+                    if(checkCollision(b_j,muro)):
+                        ls_bajasj.remove(b_j)
+                        ls_todos.remove(b_j)
+                for enemigo in ls_enemigos:
+                    if(checkCollision(b_j,enemigo)):
+                        ls_bajasj.remove(b_j)
+                        ls_todos.remove(b_j)
+                        enemigo.vida -= random.randrange(10,20)
+                    if(enemigo.vida <= 0 ):
+                        ls_todos.remove(enemigo)
+                        ls_enemigos.remove(enemigo)
+                for b_e in ls_balas_e:
+                    if(checkCollision(b_j,b_e)):
+                        ls_bajasj.remove(b_j)
+                        ls_todos.remove(b_j)
+                        ls_balas_e.remove(b_e)
+                        ls_todos.remove(b_e)
+
+                for el in ls_elementos:
+                    if(el.tipo == "boss1"):
+                        if(checkCollision(b_j,el)):
+                            ls_bajasj.remove(b_j)
+                            ls_todos.remove(b_j)
+                            el.vida -= random.randrange(20,30)
+                        if(el.vida <= 0):
+                            print "muerto"
+                            el.tipo = "cesped"
+                            el.image = pygame.image.load(images[0])
+                            mini_boss= True
+
+            for b_e in ls_balas_e:
+                for muro in ls_muros:
+                    if(checkCollision(b_e,muro)):
+                        ls_balas_e.remove(b_e)
+                        ls_todos.remove(b_e)
+                if(checkCollision(jugador,b_e)):
+                    ls_balas_e.remove(b_e)
+                    ls_todos.remove(b_e)
+                    jugador.vida -= random.randrange(10,20)
+
+
+
+            """FIN ZONA DE COLLIDES"""
+            ls_canon.update()
+            ls_todos.update()
+            ls_enemigos.update()
+            ls_jugador.update()
+            ls_elementos.draw(pantalla)
+            ls_todos.draw(pantalla)
+            ls_canon.draw(pantalla)
+            ls_bajasj.draw(pantalla)
+            ls_balas_e.draw(pantalla)
+            ls_enemigos.draw(pantalla)
+            ls_jugador.draw(pantalla)
+            status()
+            pygame.display.flip()
+
+    def nivel2(self,vida=100):
+        global ANCHO,ALTO,pantalla,jugador,ls_todos,sub,tipo,ls_balas_boss,ls_muros,ls_elementos,ls_enemigos,ls_balas_e,ls_canon
+        c_fondo = (255,0,0)
+        ALTO = 600
+        ANCHO = 800
+        global vxi,vyi
+        vxi=25
+        vyi=25
+        pygame.init()
+        pantalla = pygame.display.set_mode((ANCHO, ALTO+30))
+        pygame.display.set_caption(" Zombie maze - [lvl 2] ", 'Spine Runtime')
+        pantalla.fill(c_fondo)
+        sub = pantalla.subsurface([0,ALTO, ANCHO, 30]) #Dibuja una surface sobre la pantalla
+        tipo = pygame.font.SysFont("monospace", 15)
+        tipo.set_bold(True)
+        sub.fill((0,0,0))
+
+        ls_enemigos=pygame.sprite.Group()
+        ls_todos=pygame.sprite.Group()
+        ls_muros=pygame.sprite.Group()
+        ls_elementos=pygame.sprite.Group()
+        ls_jugador=pygame.sprite.Group()
+        ls_bajasj = pygame.sprite.Group()
+        ls_balas_e = pygame.sprite.Group()
+        ls_canon = pygame.sprite.Group()
+
+        m = dibujarmapa("mapeo0.config")
+        jugador = Jugador(80, 55)
+        jugador.vida = vida
+        jugador.paredes = ls_muros
+        ls_jugador.add(jugador)
+        ls_todos.add(jugador)
+        canon = Canon(35,550)
+        ls_canon.add(canon)
+        ls_todos.add(canon)
+
+        pos_en = [(190, 50),(730,554),(362,485),(534,309),(180,560),(414,425)]
+        dir_en = ["izquierda","arriba","arriba","arriba","arriba","izquierda"]
+        for i in range(len(pos_en)):
+            en = Enemigo(pos_en[i][0],pos_en[i][1])
+            en.paredes = ls_muros
+            en.direccion = dir_en[i]
+            ls_todos.add(en)
+            ls_enemigos.add(en)
+
+        terminar=False
+        muerto = False
+        mini_boss = False
+        while not terminar:
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    terminar=True
+                    salir=True
+
+                elif event.type==pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        terminar=True
+                        salir=True
+                    if event.key == pygame.K_n:
+                        self.historia()
+
+                    if event.key == pygame.K_SPACE:
+                        b = Bullet("archivos/imagenes/bala_j.png", jugador.rect.x, jugador.rect.y, jugador.direccion)
+                        ls_bajasj.add(b)
+                        ls_todos.add(b)
+
+            T=pygame.key.get_pressed()
+
+            if T[pygame.K_LEFT]:
+                jugador.update()
+                jugador.ir_izq()
+
+            if T[pygame.K_RIGHT]:
+                jugador.update()
+                jugador.ir_der()
+
+            if T[pygame.K_UP]:
+                jugador.update()
+                jugador.ir_arr()
+
+            if T[pygame.K_DOWN]:
+                jugador.update()
+                jugador.ir_abaj()
+
+
+            """ZONA DE COLLIDES"""
+            for ca in ls_canon:
+                if(checkCollision(ca,jugador)):
+                    ls_canon.remove(ca)
+                    ls_todos.remove(ca)
+                    jugador.vida -= random.randrange(10,20)
+            for el in ls_elementos:
+                if(el.tipo == "puerta") and (mini_boss) and checkCollision(jugador,el) and (len(ls_enemigos) == 0):
+                    self.nivel2(jugador.vida)
             for b_j in ls_bajasj:
                 for muro in ls_muros:
                     if(checkCollision(b_j,muro)):
