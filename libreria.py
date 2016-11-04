@@ -187,6 +187,116 @@ class Menu:
         mx, my = self.pozycja_wklejenia
         self.pozycja_wklejenia = (x+mx, y+my)
 
+class Bullet_canon(pygame.sprite.Sprite):
+    paredes=None
+    elementos=None
+    image_arriba = []
+    image_abajo =  []
+    image_derecha = []
+    image_izquierda=[]
+    moves=[]
+    i=0
+    i2=0
+    def __init__(self, x,y, pos_p): #img para cargar, y su padre(de donde debe salir la bala)
+    	pygame.sprite.Sprite.__init__(self)
+        self.image =  pygame.image.load("archivos/imagenes/bala_c.png").convert_alpha()
+    	self.rect = self.image.get_rect()
+    	self.rect.x = x
+    	self.rect.y = y
+        self.speed = 1
+        self.cont = 0
+
+    def go(self,pos):
+        p = [[self.rect.x,self.rect.y],pos]
+        x0 = p[0][0]
+        y0 = p[0][1]
+        x1 = p[1][0]
+        y1 = p[1][1]
+        res = []
+        dx = (x1 - x0)
+        dy = (y1 - y0)
+        if (dy < 0) :
+            dy = -1*dy
+            stepy = -1
+        else :
+            stepy = 1
+        if (dx < 0) :
+            dx = -1*dx
+            stepx = -1
+        else :
+            stepx = 1
+        x = x0
+        y = y0
+        if(dx>dy) :
+            p = 2*dy - dx
+            incE = 2*dy
+            incNE = 2*(dy-dx)
+            while (x != x1) :
+                x = x + stepx
+                if (p < 0) :
+                    p = p + incE
+                else :
+                    y = y + stepy
+                    p = p + incNE
+                p_new = [x, y]
+                res.append(p_new)
+        else :
+            p = 2*dx - dy
+            incE = 2*dx
+            incNE = 2*(dx-dy)
+            while (y != y1) :
+                y = y + stepy
+                if (p < 0) :
+                    p = p + incE
+                else :
+                    x = x + stepx
+                    p = p + incNE
+
+                p_new = [x, y]
+                res.append(p_new)
+        self.moves=res
+        self.i = 0
+    def update(self):
+        if(self.cont == 0):
+            self.cont += 1
+            if(self.i < len(self.moves)):
+                self.rect.x,self.rect.y = self.moves[self.i][0],self.moves[self.i][1]
+                self.i += 1 #para que recorra el siguiente
+            else:
+                ls_canon.remove(self)
+                ls_todos.remove(self)
+        else:
+            if(self.cont >= 2):
+                self.cont = 0
+            else:
+                self.cont += 1
+
+class Canon(pygame.sprite.Sprite):
+    def __init__(self, x,y):
+        pygame.sprite.Sprite.__init__(self)
+        self.image =  pygame.image.load("archivos/imagenes/canon.png").convert_alpha()
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.tipo = "Canon"
+        self.speed = 1
+        self.cont = 0
+
+    def update(self):
+        if(self.cont == 0):
+            self.cont += 1
+            bullet_c = Bullet_canon(self.rect.x,self.rect.y, [0,0])
+            bullet_c.go([jugador.rect.x,jugador.rect.y])
+            ls_canon.add(bullet_c)
+            ls_todos.add(bullet_c)
+        else:
+            if(self.cont >= 1000):
+                self.cont = 0
+            else:
+                self.cont += 1
+
+
+
 class Jugador(pygame.sprite.Sprite):
 
     # Atributos
@@ -410,7 +520,7 @@ class Juego:
         print "historia"
 
     def nivel1(self):
-        global ANCHO,ALTO,pantalla,jugador,ls_todos,sub,tipo,ls_balas_boss,ls_muros,ls_elementos,ls_enemigos,ls_balas_e
+        global ANCHO,ALTO,pantalla,jugador,ls_todos,sub,tipo,ls_balas_boss,ls_muros,ls_elementos,ls_enemigos,ls_balas_e,ls_canon
         c_fondo = (255,0,0)
         ALTO = 600
         ANCHO = 800
@@ -433,14 +543,16 @@ class Juego:
         ls_jugador=pygame.sprite.Group()
         ls_bajasj = pygame.sprite.Group()
         ls_balas_e = pygame.sprite.Group()
-
+        ls_canon = pygame.sprite.Group()
 
         m = dibujarmapa("mapeo.config")
-        print ls_muros
         jugador = Jugador(80, 55)
         jugador.paredes = ls_muros
         ls_jugador.add(jugador)
         ls_todos.add(jugador)
+        canon = Canon(35,550)
+        ls_canon.add(canon)
+        ls_todos.add(canon)
 
         pos_en = [(190, 50),(730,554),(362,485),(534,309),(180,560),(414,425)]
         dir_en = ["izquierda","arriba","arriba","arriba","arriba","izquierda"]
@@ -493,6 +605,11 @@ class Juego:
 
 
             """ZONA DE COLLIDES"""
+            for ca in ls_canon:
+                if(checkCollision(ca,jugador)):
+                    ls_canon.remove(b_e)
+                    ls_todos.remove(b_e)
+                    jugador.vida -= random.randrange(10,20)
             for el in ls_elementos:
                 if(el.tipo == "puerta") and (mini_boss) and checkCollision(jugador,el):
                     print("ganaste")
@@ -534,16 +651,20 @@ class Juego:
                         ls_balas_e.remove(b_e)
                         ls_todos.remove(b_e)
                 if(checkCollision(jugador,b_e)):
+                    ls_balas_e.remove(b_e)
+                    ls_todos.remove(b_e)
                     jugador.vida -= random.randrange(10,20)
 
 
 
             """FIN ZONA DE COLLIDES"""
+            ls_canon.update()
             ls_todos.update()
             ls_enemigos.update()
             ls_jugador.update()
             ls_elementos.draw(pantalla)
             ls_todos.draw(pantalla)
+            ls_canon.draw(pantalla)
             ls_bajasj.draw(pantalla)
             ls_balas_e.draw(pantalla)
             ls_enemigos.draw(pantalla)
