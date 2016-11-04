@@ -731,7 +731,7 @@ class Juego:
                     if event.key == pygame.K_RETURN:
                         terminar=True
                         salir=True
-                        self.nivel2()
+                        self.nivel1()
 
     def pantalla_game_over(self):
         ALTO = 600
